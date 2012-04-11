@@ -2,6 +2,7 @@ package com.ntcmplt;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -20,8 +21,9 @@ public class MRenderer implements GLSurfaceView.Renderer {
     private FloatBuffer triangleVB;
     private final String vertexShaderStr =
             "attribute vec4 vPosition; \n" +
+            "uniform mat4 uMVPMatrix; \n" +
             "void main() { \n" +
-            "  gl_Position = vPosition; \n" +
+            "  gl_Position = uMVPMatrix * vPosition; \n" +
             "}  \n";
 
     private final String fragmentShaderStr =
@@ -32,6 +34,12 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
     private int mProgram;
     private int mPositionHandle;
+
+    private int mMVPMatrixHandle;
+    private float[] mMVPMatrix = new float[16];
+    private float[] mMMatrix = new float[16];
+    private float[] mVMatrix = new float[16];
+    private float[] mProjMatrix = new float[16];
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
@@ -53,6 +61,11 @@ public class MRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
 
+        float ratio = (float) width / height;
+        Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "mMVPMatrix");
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+
     }
 
     @Override
@@ -62,6 +75,9 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glUseProgram(mProgram);
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 12, triangleVB);
         GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
     }
