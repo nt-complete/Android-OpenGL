@@ -62,8 +62,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
 
         float ratio = (float) width / height;
-        Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "mMVPMatrix");
+        Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 2, 7);
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
     }
@@ -73,6 +73,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         GLES20.glUseProgram(mProgram);
+
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 12, triangleVB);
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
@@ -107,4 +108,6 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glCompileShader(shader);
         return shader;
     }
+
 }
+
