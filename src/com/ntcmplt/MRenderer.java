@@ -41,6 +41,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
     private float[] mVMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
 
+    private float angle = 0.0f;
+
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         GLES20.glClearColor(0.5f,0.5f,0.5f, 1.0f);
@@ -77,26 +79,55 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 12, triangleVB);
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+        /*long time = SystemClock.uptimeMillis() * 4000L;
+        float angle = 0.00005f * ((int) time);*/
+
+        angle += 1.0f;
+        Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, mMMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
+
+
+        //Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 10);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 10, 4);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 14, 4);
     }
 
 
     private void initShapes() {
-        float triangleCoords[] = {
-                -0.5f, -0.25f, 0,
-                0.5f, -0.25f, 0,
-                0.0f, 0.559016994f, 0
+        float squareCoords[] = {
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, 0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
+                0.5f, -0.5f, -0.5f,
+                0.5f, 0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, 0.5f, -0.5f,
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, 0.5f, 0.5f,
+
+                -0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
+                -0.5f, 0.5f, -0.5f,
+                0.5f, 0.5f, -0.5f,
+
+                -0.5f, -0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                -0.5f, -0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f
+
         };
 
         ByteBuffer vbb = ByteBuffer.allocateDirect(
-                triangleCoords.length * 4
+                squareCoords.length * 4
         );
         vbb.order(ByteOrder.nativeOrder());
         triangleVB = vbb.asFloatBuffer();
-        triangleVB.put(triangleCoords);
+        triangleVB.put(squareCoords);
         triangleVB.position(0);
     }
 
