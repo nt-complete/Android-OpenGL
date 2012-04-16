@@ -34,7 +34,7 @@ public class MainActivity extends Activity
             super(context);
 
             setEGLContextClientVersion(2);
-            setRenderer(new MRenderer());
+            setRenderer(new MRendererLight());
         }
     }
 }

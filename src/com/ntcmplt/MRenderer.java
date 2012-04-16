@@ -141,4 +141,3 @@ public class MRenderer implements GLSurfaceView.Renderer {
     }
 
 }
-
