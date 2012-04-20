@@ -18,7 +18,7 @@ import java.nio.FloatBuffer;
  */
 public class MRendererLight implements GLSurfaceView.Renderer {
 
-    private FloatBuffer triangleVB, normalVB;
+    private FloatBuffer triangleVB, normalVB, colorVB;
     private final String vertexShaderStr =
             "attribute vec4 vPosition; \n " +
             "attribute vec4 vColor;\n " +
@@ -31,7 +31,7 @@ public class MRendererLight implements GLSurfaceView.Renderer {
             "varying vec4 varColor;\n " +
             "\n " +
             "void main()  {\n " +
-            /*"	// For transferring the vertex position in eye-space\n " +
+            "	// For transferring the vertex position in eye-space\n " +
             "	vec3 modelViewVertex = vec3(uMVMatrix * vPosition);\n " +
             "\n " +
             "	// Obtains the normal\n " +
@@ -41,10 +41,10 @@ public class MRendererLight implements GLSurfaceView.Renderer {
             "	vec3 lightVector = normalize(uLightPosition - modelViewVertex);\n " +
             "\n " +
             "	float diffuse = max(dot(modelViewNormal, lightVector), 0.1);\n " +
-            "	diffuse *= (1.0 / (1.0 + (0.25 * distance * distance)));\n " +
+            "	//diffuse *= (1.0 / (1.0 + (0.25 * distance * distance)));\n " +
             "\n " +
-            "	varColor = vColor * diffuse;\n " +
-            "\n " +*/
+            "	varColor = vColor * diffuse ;\n " +
+            "\n " +
             "	gl_Position = uMVPMatrix * vPosition; \n " +
             "\n " +
             "\n " +
@@ -52,8 +52,9 @@ public class MRendererLight implements GLSurfaceView.Renderer {
 
     private final String fragmentShaderStr =
             "precision mediump float; \n" +
+                    "varying vec4 varColor;\n" +
                     "void main() { \n" +
-                    "  gl_FragColor = vec4(0.63671875, 0.76953125, 0.22265625, 1.0); \n" +
+                    "  gl_FragColor = varColor; \n" +
                     "}  \n";
 
     private int mProgram;
@@ -61,17 +62,13 @@ public class MRendererLight implements GLSurfaceView.Renderer {
     private float[] mMVPMatrix = new float[16];
     private float[] mMMatrix = new float[16];
     private float[] mVMatrix = new float[16];
+    private float[] mMVMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
-    private float[] mLMMatrix = new float[16];
-
-    private float[] lightPosition = {0.0f, 0.0f, 1.0f, 1.0f};
-    private float[] lightPosInWorld = new float[4];
-    private float[] lightPosInEye = new float[4];
     private float angle = 0.0f;
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        GLES20.glClearColor(0.0f,0.0f,0.0f, 1.0f);
+        GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         //GLES20.glEnable(GLES20.GL_CULL_FACE);
         //GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         initShapes();
@@ -88,6 +85,10 @@ public class MRendererLight implements GLSurfaceView.Renderer {
         GLES20.glGetProgramInfoLog(mProgram);
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        mLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition");
+        //mPositionHandle = GLES20.glGetUniformLocation(mProgram, "vPosition");
+        mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+        mNormalHandle = GLES20.glGetAttribLocation(mProgram, "vNormal");
 
     }
 
@@ -98,12 +99,8 @@ public class MRendererLight implements GLSurfaceView.Renderer {
         float ratio = (float) width / height;
         Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 2, 7);
 
-        /*mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         mMVMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVMatrix");
-        mLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition");
-        mPositionHandle = GLES20.glGetUniformLocation(mProgram, "vPosition");
-        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        mNormalHandle = GLES20.glGetUniformLocation(mProgram, "vNormal");*/
 
         Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
@@ -116,42 +113,23 @@ public class MRendererLight implements GLSurfaceView.Renderer {
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 12, triangleVB);
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
-        angle += 1.0f;
-        Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, mMMatrix, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
-        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0);
-
-
-        /*long time = SystemClock.uptimeMillis() * 4000L;
-        float angle = 0.00005f * ((int) time);*/
-/*
-        Matrix.setIdentityM(mLMMatrix, 0);
-        Matrix.translateM(mLMMatrix, 0, 0.0f, 0.0f, -5.0f);
-        Matrix.rotateM(mLMMatrix, 0, angle, 0.0f, 1.0f, 0.0f);
-        Matrix.translateM(mLMMatrix, 0, 0.0f, 0.0f, 2.0f);
-        Matrix.multiplyMV(lightPosInWorld, 0, mLMMatrix, 0, lightPosition, 0);
-        Matrix.multiplyMV(lightPosInEye, 0, mVMatrix, 0, lightPosInWorld, 0);
-*/
-
-        //Matrix.setIdentityM(mMMatrix, 0);
-        //Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
-
-        /*GLES20.glVertexAttribPointer(mNormalHandle, 6, GLES20.GL_FLOAT, false, 0, normalVB);
+        GLES20.glVertexAttribPointer(mNormalHandle, 3, GLES20.GL_FLOAT, true, 0, normalVB);
         GLES20.glEnableVertexAttribArray(mNormalHandle);
 
+        GLES20.glVertexAttribPointer(mColorHandle, 4, GLES20.GL_FLOAT, true, 0, colorVB);
+        GLES20.glEnableVertexAttribArray(mColorHandle);
 
-        Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, mMMatrix, 0);
-        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
+        angle += 1.0f;
 
+        Matrix.setIdentityM(mMMatrix, 0);
+        Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
+        Matrix.multiplyMM(mMVMatrix, 0, mVMatrix, 0, mMMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVMatrix, 0);
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
-        GLES20.glUniform3f(mLightPosHandle, lightPosInEye[0], lightPosInEye[1], lightPosInEye[2]);
-*/
+        GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
-        /*GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 10, 4);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 14, 4);*/
     }
 
 
@@ -191,12 +169,21 @@ public class MRendererLight implements GLSurfaceView.Renderer {
         };
 
         float squareNormals[] = {
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f,
+                0.0f, 0.0f, -1.0f
+        };
+
+        float squareColors[] = {
+                1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 1.0f
         };
 
         ByteBuffer vbb = ByteBuffer.allocateDirect(
@@ -209,6 +196,9 @@ public class MRendererLight implements GLSurfaceView.Renderer {
 
         normalVB = ByteBuffer.allocateDirect(squareNormals.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         normalVB.put(squareNormals).position(0);
+
+        colorVB = ByteBuffer.allocateDirect(squareColors.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        colorVB.put(squareColors).position(0);
     }
 
 
