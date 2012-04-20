@@ -69,8 +69,9 @@ public class MRendererLight implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-        //GLES20.glEnable(GLES20.GL_CULL_FACE);
-        //GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
+        //GLES20.glCullFace(GLES20.GL_FRONT);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         initShapes();
 
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderStr);
@@ -129,52 +130,105 @@ public class MRendererLight implements GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
         GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
     }
 
 
     private void initShapes() {
-        /*float squareCoords[] = {
-                -0.5f, -0.5f, 0.0f,
-                -0.5f, 0.5f, 0.0f,
-                0.5f, -0.5f, 0.0f,
-                0.5f, 0.5f, 0.0f,
-                0.5f, -0.5f, -0.0f,
-                0.5f, 0.5f, -0.0f,
-                -0.5f, -0.5f, -0.0f,
-                -0.5f, 0.5f, -0.0f,
-                -0.5f, -0.5f, 0.0f,
-                -0.5f, 0.5f, 0.0f,
-
-                -0.5f, 0.5f, 0.0f,
-                0.5f, 0.5f, 0.0f,
-                -0.5f, 0.5f, -0.0f,
-                0.5f, 0.5f, -0.0f,
-
-                -0.5f, -0.5f, 0.0f,
-                0.5f, -0.5f, 0.0f,
-                -0.5f, -0.5f, -0.0f,
-                0.5f, -0.5f, -0.0f,
-
-        };*/
-
         float squareCoords[] = {
-                -0.5f, -0.5f, 0.0f,
-                0.5f, -0.5f, 0.0f,
-                -0.5f, 0.5f, 0.0f,
-                0.5f, 0.5f, 0.0f,
-                -0.5f, 0.5f, 0.0f,
-                0.5f, -0.5f, 0.0f
+                // Front face
+                -0.5f, -0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                -0.5f, 0.5f, 0.5f,
+                -0.5f, 0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
 
+                // Right face
+                0.5f, 0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f,
+                0.5f, -0.5f, 0.5f,
+                0.5f, -0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, -0.5f,
+
+                // Back face
+                -0.5f, 0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                0.5f, 0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f,
+                -0.5f, 0.5f, -0.5f,
+
+                // Left face
+                -0.5f, 0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, 0.5f, 0.5f,
+                -0.5f, 0.5f, -0.5f,
+
+                // Top face
+                -0.5f, 0.5f, -0.5f,
+                -0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, -0.5f,
+                -0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, -0.5f,
+
+                // Bottom face
+                -0.5f, -0.5f, -0.5f,
+                0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, 0.5f,
+                -0.5f, -0.5f, 0.5f,
+                0.5f, -0.5f, -0.5f,
+                0.5f, -0.5f, 0.5f
         };
 
+
         float squareNormals[] = {
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+                0.0f, 0.0f, 1.0f,
+
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+
                 0.0f, 0.0f, -1.0f,
                 0.0f, 0.0f, -1.0f,
                 0.0f, 0.0f, -1.0f,
                 0.0f, 0.0f, -1.0f,
                 0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f
+                0.0f, 0.0f, -1.0f,
+
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+                -1.0f, 0.0f, 0.0f,
+
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, -1.0f, 0.0f
+
         };
 
         float squareColors[] = {
@@ -183,7 +237,43 @@ public class MRendererLight implements GLSurfaceView.Renderer {
                 1.0f, 0.0f, 0.0f, 1.0f,
                 1.0f, 0.0f, 0.0f, 1.0f,
                 1.0f, 0.0f, 0.0f, 1.0f,
-                1.0f, 0.0f, 0.0f, 1.0f
+                1.0f, 0.0f, 0.0f, 1.0f,
+
+                0.0f, 1.0f, 0.0f, 1.0f,
+                0.0f, 1.0f, 0.0f, 1.0f,
+                0.0f, 1.0f, 0.0f, 1.0f,
+                0.0f, 1.0f, 0.0f, 1.0f,
+                0.0f, 1.0f, 0.0f, 1.0f,
+                0.0f, 1.0f, 0.0f, 1.0f,
+
+                0.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+
+                0.5f, 0.0f, 0.5f, 1.0f,
+                0.5f, 0.0f, 0.5f, 1.0f,
+                0.5f, 0.0f, 0.5f, 1.0f,
+                0.5f, 0.0f, 0.5f, 1.0f,
+                0.5f, 0.0f, 0.5f, 1.0f,
+                0.5f, 0.0f, 0.5f, 1.0f,
+
+                0.0f, 0.5f, 0.5f, 1.0f,
+                0.0f, 0.5f, 0.5f, 1.0f,
+                0.0f, 0.5f, 0.5f, 1.0f,
+                0.0f, 0.5f, 0.5f, 1.0f,
+                0.0f, 0.5f, 0.5f, 1.0f,
+                0.0f, 0.5f, 0.5f, 1.0f,
+
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f, 1.0f
+
         };
 
         ByteBuffer vbb = ByteBuffer.allocateDirect(
