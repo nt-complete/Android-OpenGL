@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.view.MotionEvent;
 
 public class MainActivity extends Activity
 {
@@ -30,11 +31,25 @@ public class MainActivity extends Activity
 
     class MSurfaceView extends GLSurfaceView {
 
+        MRenderer mRenderer;
         public MSurfaceView(Context context) {
             super(context);
 
             setEGLContextClientVersion(2);
-            setRenderer(new MRendererLight());
+            mRenderer = new MRenderer();
+            setRenderer(mRenderer);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if(event.getX() > MSurfaceView.this.getWidth() / 2) {
+                mRenderer.horizontalAngle += 1.0f;
+            } else {
+                mRenderer.horizontalAngle -= 1.0f;
+
+            }
+
+            return true;
         }
     }
 }
