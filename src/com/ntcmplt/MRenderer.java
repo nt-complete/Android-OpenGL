@@ -3,6 +3,7 @@ package com.ntcmplt;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.view.MotionEvent;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -16,6 +17,9 @@ import java.nio.FloatBuffer;
  * Date: 4/10/12
  * Time: 7:54 PM
  */
+
+
+//TODO: specular lighting, smooth touch, figure out FPS
 public class MRenderer implements GLSurfaceView.Renderer {
 
     private FloatBuffer triangleVB, normalVB, colorVB;
@@ -40,10 +44,14 @@ public class MRenderer implements GLSurfaceView.Renderer {
             "	float distance = length(uLightPosition - modelViewVertex);\n " +
             "	vec3 lightVector = normalize(uLightPosition - modelViewVertex);\n " +
             "\n " +
-            "	float diffuse = max(dot(modelViewNormal, lightVector), 0.1);\n " +
-            "	//diffuse *= (1.0 / (1.0 + (0.25 * distance * distance)));\n " +
+            "	float LambertTerm = max(dot(modelViewNormal, lightVector), 0.5);\n " +
+            "	float diffuse = LambertTerm * (1.0 / (1.0 + (0.1 * distance * distance)));\n " +
+            " \n " +
+            "	 vec3 R = reflect(-lightVector, modelViewNormal); \n " +
+            "    vec3 vEye = vec3(0.0, 0.0, 1.0); \n " +
+            "	 float specular = 1.0 * 1.0 * pow(max(dot(R, vEye), 0.0), 1.0);  \n " +
             "\n " +
-            "	varColor = vColor * diffuse ;\n " +
+            "	varColor = ((vColor * 0.2) + vColor * diffuse * specular) ;\n " +
             "\n " +
             "	gl_Position = uMVPMatrix * vPosition; \n " +
             "\n " +
@@ -65,14 +73,19 @@ public class MRenderer implements GLSurfaceView.Renderer {
     private float[] mMVMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
     private float angle = 0.0f;
-    public float horizontalAngle = 0.0f;
     private float zTrans = 0.0f;
+
+    public float width = 0;
+    public float height = 0;
+    public float horizontalAngle = 0.0f;
+    public float verticalAngle = 0.0f;
+    public boolean touched = false;
+    public MotionEvent touch = null;
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         GLES20.glEnable(GLES20.GL_CULL_FACE);
-        //GLES20.glCullFace(GLES20.GL_FRONT);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         initShapes();
 
@@ -89,7 +102,6 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         mLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition");
-        //mPositionHandle = GLES20.glGetUniformLocation(mProgram, "vPosition");
         mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
         mNormalHandle = GLES20.glGetAttribLocation(mProgram, "vNormal");
 
@@ -98,6 +110,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
+        this.width = width;
+        this.height = height;
 
         float ratio = (float) width / height;
         Matrix.frustumM(mProjMatrix, 0, ratio, -ratio, -1, 1, 2, 7);
@@ -124,12 +138,27 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glEnableVertexAttribArray(mColorHandle);
 
         angle += 1.0f;
-        horizontalAngle += 1.0f;
+        //horizontalAngle += 1.0f;
         zTrans += 0.05;
 
+        //Log.d("TILLER", "Horizontal Angle in: " + horizontalAngle);
+        if(touched) {
+            if(touch != null) {
+                if(touch.getX() > MRenderer.this.width / 2) {
+                    horizontalAngle -= 1.0f;
+                } else {
+                    horizontalAngle += 1.0f;
+                }
+
+            }
+        }
+        float[] mRMatrix = new float[16];
         Matrix.setIdentityM(mMMatrix, 0);
-        Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
-        Matrix.setRotateM(mMMatrix, 0, horizontalAngle, 1.0f, 1.0f, 0);
+        Matrix.setIdentityM(mRMatrix, 0);
+        //Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
+        Matrix.setRotateM(mMMatrix, 0, horizontalAngle, 0.0f, 1.0f, 0);
+        Matrix.setRotateM(mRMatrix, 0, verticalAngle, 1.0f, 0.0f, 0);
+        Matrix.multiplyMM(mMMatrix, 0, mMMatrix, 0, mRMatrix, 0);
         //Matrix.translateM(mMMatrix,0,0,zTrans,0);
         Matrix.multiplyMM(mMVMatrix, 0, mVMatrix, 0, mMMatrix, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVMatrix, 0);

@@ -38,17 +38,24 @@ public class MainActivity extends Activity
             setEGLContextClientVersion(2);
             mRenderer = new MRenderer();
             setRenderer(mRenderer);
+            //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            if(event.getX() > MSurfaceView.this.getWidth() / 2) {
-                mRenderer.horizontalAngle += 1.0f;
-            } else {
-                mRenderer.horizontalAngle -= 1.0f;
-
+            if(event.getAction() == MotionEvent.ACTION_DOWN) {
+               mRenderer.touched = true;
+                mRenderer.touch = event;
             }
 
+            if(event.getAction() == MotionEvent.ACTION_UP) {
+                mRenderer.touched = false;
+                mRenderer.touch = null;
+            }
+
+
+            //Log.d("TILLER", "Horizontal Angle out: " + mRenderer.horizontalAngle);
+            //requestRender();
             return true;
         }
     }
