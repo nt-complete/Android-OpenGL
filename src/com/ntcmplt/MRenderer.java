@@ -1,15 +1,20 @@
 package com.ntcmplt;
 
+import android.app.Activity;
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.util.Log;
 import android.view.MotionEvent;
+import android.widget.TextView;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Calendar;
 
 /**
  * Created by IntelliJ IDEA.
@@ -65,6 +70,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
                     "  gl_FragColor = varColor; \n" +
                     "}  \n";
 
+    private Context context;
     private int mProgram;
     private int mPositionHandle, mMVMatrixHandle, mMVPMatrixHandle, mLightPosHandle, mColorHandle, mNormalHandle;
     private float[] mMVPMatrix = new float[16];
@@ -74,6 +80,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
     private float[] mProjMatrix = new float[16];
     private float angle = 0.0f;
     private float zTrans = 0.0f;
+    private long prevTime;
+    private float frameCount = 0;
 
     public float width = 0;
     public float height = 0;
@@ -81,6 +89,13 @@ public class MRenderer implements GLSurfaceView.Renderer {
     public float verticalAngle = 0.0f;
     public boolean touched = false;
     public MotionEvent touch = null;
+
+
+
+    public MRenderer(Context context) {
+        this.context = context;
+    }
+
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
@@ -105,6 +120,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
         mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
         mNormalHandle = GLES20.glGetAttribLocation(mProgram, "vNormal");
 
+        prevTime = Calendar.getInstance().getTimeInMillis();
     }
 
     @Override
@@ -167,6 +183,25 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         //GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
+        frameCount++;
+
+        if(Calendar.getInstance().getTimeInMillis() - prevTime >= 1000) {
+            Log.d("TILLER", "FPS: " + frameCount);
+
+            Activity mActivity = (Activity) context;
+            final TextView textView = (TextView) mActivity.findViewById(R.id.FPS_text);
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    textView.setText("FPS: " + frameCount);
+
+                }
+            });
+
+            prevTime = Calendar.getInstance().getTimeInMillis();
+            frameCount = 0;
+
+        }
     }
 
 

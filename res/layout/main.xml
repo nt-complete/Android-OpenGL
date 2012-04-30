@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<TextView  
+<view class="com.ntcmplt.MainActivity$MSurfaceView"
+    android:id="@+id/surface_view"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    />
+
+
+<TextView
+        android:id="@+id/FPS_text"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
-    android:text="Hello World, MyActivity"
+    android:text="FPS"
+    android:layout_marginLeft="10dp"
     />
-</LinearLayout>
+</FrameLayout>
 

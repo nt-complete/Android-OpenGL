@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 
 public class MainActivity extends Activity
@@ -13,8 +14,9 @@ public class MainActivity extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        mSurfaceView = new MSurfaceView(this);
-        setContentView(mSurfaceView);
+        //mSurfaceView = new MSurfaceView(this);
+        setContentView(R.layout.main);
+        mSurfaceView = (MSurfaceView) findViewById(R.id.surface_view);
     }
 
     @Override
@@ -29,14 +31,14 @@ public class MainActivity extends Activity
         mSurfaceView.onResume();
     }
 
-    class MSurfaceView extends GLSurfaceView {
+    public static class MSurfaceView extends GLSurfaceView {
 
         MRenderer mRenderer;
-        public MSurfaceView(Context context) {
-            super(context);
+        public MSurfaceView(Context context, AttributeSet attributeSet) {
+            super(context, attributeSet);
 
             setEGLContextClientVersion(2);
-            mRenderer = new MRenderer();
+            mRenderer = new MRenderer(context);
             setRenderer(mRenderer);
             //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         }
@@ -58,5 +60,6 @@ public class MainActivity extends Activity
             //requestRender();
             return true;
         }
+
     }
 }
