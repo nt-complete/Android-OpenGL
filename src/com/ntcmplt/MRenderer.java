@@ -14,6 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 /**
@@ -257,7 +258,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
         };
 
 
-        float squareNormals[] = {
+        /*float squareNormals[] = {
                 0.0f, 0.0f, 1.0f,
                 0.0f, 0.0f, 1.0f,
                 0.0f, 0.0f, 1.0f,
@@ -300,7 +301,60 @@ public class MRenderer implements GLSurfaceView.Renderer {
                 0.0f, -1.0f, 0.0f,
                 0.0f, -1.0f, 0.0f
 
-        };
+        };*/
+
+        ArrayList<Float> squareNormals = new ArrayList<Float>();
+        int i = 0;
+        while( i < squareCoords.length ) {
+            float point1[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
+            float point2[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
+            float point3[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
+
+            float vec11[] = {point1[0] - point2[0], point1[1] - point2[1], point1[2] - point2[2]};
+            float vec21[] = {point1[0] - point3[0], point1[1] - point3[1], point1[2] - point3[2]};
+            float normal1[] = {
+                    vec11[1] * vec21[2] - vec11[2] * vec21[1],
+                    vec11[2] * vec21[0] - vec11[0] * vec21[2],
+                    vec11[0] * vec21[1] - vec11[1] * vec21[0]
+            };
+
+            for (float aNormal : normal1) {
+                squareNormals.add(aNormal);
+            }
+
+
+            float vec12[] = {point2[0] - point1[0], point2[1] - point1[1], point2[2] - point1[2]};
+            float vec22[] = {point2[0] - point3[0], point2[1] - point3[1], point2[2] - point3[2]};
+            float normal2[] = {
+                    vec12[1] * vec22[2] - vec12[2] * vec22[1],
+                    vec12[2] * vec22[0] - vec12[0] * vec22[2],
+                    vec12[0] * vec22[1] - vec12[1] * vec22[0]
+            };
+
+            for (float aNormal : normal2) {
+                squareNormals.add(aNormal);
+            }
+
+
+            float vec13[] = {point3[0] - point1[0], point3[1] - point1[1], point3[2] - point1[2]};
+            float vec23[] = {point3[0] - point2[0], point3[1] - point2[1], point3[2] - point2[2]};
+            float normal3[] = {
+                    vec13[1] * vec23[2] - vec13[2] * vec23[1],
+                    vec13[2] * vec23[0] - vec13[0] * vec23[2],
+                    vec13[0] * vec23[1] - vec13[1] * vec23[0]
+            };
+
+            for (float aNormal : normal3) {
+                squareNormals.add(aNormal);
+            }
+        }
+
+        float squareNormalsArray[] = new float[squareNormals.size()];
+        for(i = 0; i < squareNormals.size(); i++) {
+            squareNormalsArray[i] = squareNormals.get(i);
+
+        }
+
 
         float squareColors[] = {
                 1.0f, 0.0f, 0.0f, 1.0f,
@@ -355,8 +409,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
         triangleVB.put(squareCoords);
         triangleVB.position(0);
 
-        normalVB = ByteBuffer.allocateDirect(squareNormals.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        normalVB.put(squareNormals).position(0);
+        normalVB = ByteBuffer.allocateDirect(squareNormalsArray.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        normalVB.put(squareNormalsArray).position(0);
 
         colorVB = ByteBuffer.allocateDirect(squareColors.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         colorVB.put(squareColors).position(0);
