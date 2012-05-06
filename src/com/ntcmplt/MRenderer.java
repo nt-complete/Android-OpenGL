@@ -25,8 +25,9 @@ import java.util.Calendar;
  */
 
 
-//TODO: specular lighting, smooth touch, figure out FPS
 public class MRenderer implements GLSurfaceView.Renderer {
+
+    private int iters;
 
     private FloatBuffer triangleVB, normalVB, colorVB;
     private final String vertexShaderStr =
@@ -184,10 +185,12 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         //GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
+        //GLES20.glDrawArrays(GLES20.GL_LINES, 0, 36);
+
         frameCount++;
 
         if(Calendar.getInstance().getTimeInMillis() - prevTime >= 1000) {
-            Log.d("TILLER", "FPS: " + frameCount);
+            //Log.d("TILLER", "FPS: " + frameCount);
 
             Activity mActivity = (Activity) context;
             final TextView textView = (TextView) mActivity.findViewById(R.id.FPS_text);
@@ -207,7 +210,10 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
 
     private void initShapes() {
-        float squareCoords[] = {
+
+        float squareCoords[] = generateTorus();
+        squareCoords = arrangeTorusCoords(squareCoords);
+        /*float squareCoords[] = {
                 // Back face
                 -0.5f, -0.5f, 0.5f,
                 -0.5f, 0.5f, 0.5f,
@@ -255,53 +261,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
                 -0.5f, -0.5f, 0.5f,
                 0.5f, -0.5f, 0.5f,
                 0.5f, -0.5f, -0.5f
-        };
-
-
-        /*float squareNormals[] = {
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f
-
         };*/
+
 
         ArrayList<Float> squareNormals = new ArrayList<Float>();
         int i = 0;
@@ -323,8 +284,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
             }
 
 
-            float vec12[] = {point2[0] - point1[0], point2[1] - point1[1], point2[2] - point1[2]};
-            float vec22[] = {point2[0] - point3[0], point2[1] - point3[1], point2[2] - point3[2]};
+            float vec22[] = {point2[0] - point1[0], point2[1] - point1[1], point2[2] - point1[2]};
+            float vec12[] = {point2[0] - point3[0], point2[1] - point3[1], point2[2] - point3[2]};
             float normal2[] = {
                     vec12[1] * vec22[2] - vec12[2] * vec22[1],
                     vec12[2] * vec22[0] - vec12[0] * vec22[2],
@@ -355,6 +316,9 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         }
 
+        for(i = 0; i < squareNormalsArray.length;) {
+           Log.d("Tiller", "Normal: " + squareNormalsArray[i++] + ", " + squareNormalsArray[i++] + ", " + squareNormalsArray[i++]) ;
+        }
 
         float squareColors[] = {
                 1.0f, 0.0f, 0.0f, 1.0f,
@@ -401,13 +365,16 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         };
 
-        ByteBuffer vbb = ByteBuffer.allocateDirect(
+        /*ByteBuffer vbb = ByteBuffer.allocateDirect(
                 squareCoords.length * 4
         );
         vbb.order(ByteOrder.nativeOrder());
         triangleVB = vbb.asFloatBuffer();
-        triangleVB.put(squareCoords);
-        triangleVB.position(0);
+        //triangleVB.put(squareCoords);
+        triangleVB.put(squareAndNorms);
+        triangleVB.position(0);*/
+        triangleVB = ByteBuffer.allocateDirect(squareCoords.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        triangleVB.put(squareCoords).position(0);
 
         normalVB = ByteBuffer.allocateDirect(squareNormalsArray.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         normalVB.put(squareNormalsArray).position(0);
@@ -417,7 +384,67 @@ public class MRenderer implements GLSurfaceView.Renderer {
     }
 
 
+    private float[] generateTorus() {
+        ArrayList<Float> torusArrayList = new ArrayList<Float>();
+        float interval = (float) (Math.PI / 2);
+       float r = 0.5f;
+       float R = 0.75f;
+       for(float u = 0; u < 2 * Math.PI; u += interval ) {
+           iters++;
+           for(float v = 0; v < 2 * Math.PI; v += interval ) {
+               float x = (float) ((R + r * Math.cos(v)) * Math.cos(u));
+               float y = (float) ((R + r * Math.cos(v)) * Math.sin(u));
+               float z = (float) (r * Math.sin(v));
+               torusArrayList.add(x);
+               torusArrayList.add(y);
+               torusArrayList.add(z);
 
+           }
+       }
+
+        Log.d("Tiller", "iters: " + iters);
+       float torusCoords[] = new float[torusArrayList.size()];
+        for(int i = 0; i < torusArrayList.size(); i++) {
+           torusCoords[i] = torusArrayList.get(i);
+        }
+
+
+        return torusCoords;
+    }
+
+    private float[] arrangeTorusCoords(float[] torusCoords) {
+        int references[] = new int[3 * iters * iters];
+        int refCount = 0;
+
+        for(int i = 0; i < iters; i++) {
+            for(int j = 0; j < iters; j++) {
+                if( j % 2 == 0) {
+                    references[refCount++] = i*iters + j;
+                    references[refCount++] = i*iters + j + 1;
+                    references[refCount++] = (i+1)*iters + j;
+                } else {
+                    references[refCount++] = i*iters + j;
+                    references[refCount++] = (i+1)*iters + j;
+                    references[refCount++] = (i+1)*iters + j+1;
+                }
+            }
+
+        }
+
+        Log.d("Tiller", "TorusCoords length: " + torusCoords.length);
+        Log.d("Tiller", "references length: " + references.length);
+        float referencedCoords[] = new float[3 * torusCoords.length];
+        for(int i = 0; i < references.length; i++) {
+            int point = i * 3;
+            int coordPoint = references[i];
+            referencedCoords[point++] = torusCoords[coordPoint++];
+            referencedCoords[point++] = torusCoords[coordPoint++];
+            referencedCoords[point] = torusCoords[coordPoint];
+
+        }
+
+        return referencedCoords;
+    }
 
     public int loadShader(int type, String shaderStr) {
         int shader = GLES20.glCreateShader(type);
