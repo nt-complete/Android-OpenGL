@@ -27,9 +27,9 @@ import java.util.Calendar;
 
 public class MRenderer implements GLSurfaceView.Renderer {
 
-    private int iters;
+    private int iters, pointCount;
 
-    private FloatBuffer triangleVB, normalVB, colorVB;
+    private FloatBuffer torusVB, normalVB, colorVB;
     private final String vertexShaderStr =
             "attribute vec4 vPosition; \n " +
             "attribute vec4 vColor;\n " +
@@ -146,7 +146,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         GLES20.glUseProgram(mProgram);
-        GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 12, triangleVB);
+        GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 12, torusVB);
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
         GLES20.glVertexAttribPointer(mNormalHandle, 3, GLES20.GL_FLOAT, true, 0, normalVB);
@@ -184,7 +184,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
         //GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, pointCount);
         //GLES20.glDrawArrays(GLES20.GL_LINES, 0, 36);
 
         frameCount++;
@@ -212,7 +212,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
     private void initShapes() {
 
         float squareCoords[] = generateTorus();
-        squareCoords = arrangeTorusCoords(squareCoords);
+        //squareCoords = arrangeTorusCoords(squareCoords);
         /*float squareCoords[] = {
                 // Back face
                 -0.5f, -0.5f, 0.5f,
@@ -266,7 +266,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         ArrayList<Float> squareNormals = new ArrayList<Float>();
         int i = 0;
-        while( i < squareCoords.length ) {
+        /*while( i < squareCoords.length ) {
             float point1[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
             float point2[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
             float point3[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
@@ -308,13 +308,13 @@ public class MRenderer implements GLSurfaceView.Renderer {
             for (float aNormal : normal3) {
                 squareNormals.add(aNormal);
             }
-        }
+        }*/
 
         float squareNormalsArray[] = new float[squareNormals.size()];
-        for(i = 0; i < squareNormals.size(); i++) {
+        /*for(i = 0; i < squareNormals.size(); i++) {
             squareNormalsArray[i] = squareNormals.get(i);
 
-        }
+        }*/
 
         for(i = 0; i < squareNormalsArray.length;) {
            Log.d("Tiller", "Normal: " + squareNormalsArray[i++] + ", " + squareNormalsArray[i++] + ", " + squareNormalsArray[i++]) ;
@@ -369,12 +369,12 @@ public class MRenderer implements GLSurfaceView.Renderer {
                 squareCoords.length * 4
         );
         vbb.order(ByteOrder.nativeOrder());
-        triangleVB = vbb.asFloatBuffer();
-        //triangleVB.put(squareCoords);
-        triangleVB.put(squareAndNorms);
-        triangleVB.position(0);*/
-        triangleVB = ByteBuffer.allocateDirect(squareCoords.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        triangleVB.put(squareCoords).position(0);
+        torusVB = vbb.asFloatBuffer();
+        //torusVB.put(squareCoords);
+        torusVB.put(squareAndNorms);
+        torusVB.position(0);*/
+        torusVB = ByteBuffer.allocateDirect(squareCoords.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        torusVB.put(squareCoords).position(0);
 
         normalVB = ByteBuffer.allocateDirect(squareNormalsArray.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         normalVB.put(squareNormalsArray).position(0);
@@ -386,23 +386,31 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
     private float[] generateTorus() {
         ArrayList<Float> torusArrayList = new ArrayList<Float>();
-        float interval = (float) (Math.PI / 2);
-       float r = 0.5f;
-       float R = 0.75f;
-       for(float u = 0; u < 2 * Math.PI; u += interval ) {
-           iters++;
-           for(float v = 0; v < 2 * Math.PI; v += interval ) {
-               float x = (float) ((R + r * Math.cos(v)) * Math.cos(u));
-               float y = (float) ((R + r * Math.cos(v)) * Math.sin(u));
-               float z = (float) (r * Math.sin(v));
-               torusArrayList.add(x);
-               torusArrayList.add(y);
-               torusArrayList.add(z);
+        float intervalNum = 2;
+        float interval = (float) (Math.PI / intervalNum);
+        float max = intervalNum * interval * 2;
+        Log.d("Tiller", "Max: " + max);
+        float r = 1.0f;
+        float R = 0.5f;
+        iters = pointCount = 0;
+        for(float u = 0; u < max; u += (Math.PI / intervalNum) ) {
+            iters++;
+            Log.d("Tiller", "interval: " + interval);
+            for(float v = 0; v < max; v += (Math.PI / intervalNum) ) {
+                pointCount++;
+                float x = (float) ((R + r * Math.cos(v)) * Math.cos(u));
+                float y = (float) ((R + r * Math.cos(v)) * Math.sin(u));
+                float z = (float) (r * Math.sin(v));
+                torusArrayList.add(x);
+                torusArrayList.add(y);
+                torusArrayList.add(z);
+                Log.d("Tiller",u + " " + v + ": " + x + ", " + y + ", " + z);
 
-           }
-       }
+            }
+        }
 
         Log.d("Tiller", "iters: " + iters);
+        Log.d("Tiller", "pointCount: " + pointCount);
        float torusCoords[] = new float[torusArrayList.size()];
         for(int i = 0; i < torusArrayList.size(); i++) {
            torusCoords[i] = torusArrayList.get(i);
