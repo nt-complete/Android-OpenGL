@@ -14,6 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -28,8 +29,10 @@ import java.util.Calendar;
 public class MRenderer implements GLSurfaceView.Renderer {
 
     private int iters, pointCount;
+    public float intervalNum = 2;
 
     private FloatBuffer torusVB, normalVB, colorVB;
+    private IntBuffer indicesVB;
     private final String vertexShaderStr =
             "attribute vec4 vPosition; \n " +
             "attribute vec4 vColor;\n " +
@@ -102,7 +105,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-        GLES20.glEnable(GLES20.GL_CULL_FACE);
+        //GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         initShapes();
 
@@ -132,7 +135,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
         this.height = height;
 
         float ratio = (float) width / height;
-        Matrix.frustumM(mProjMatrix, 0, ratio, -ratio, -1, 1, 2, 7);
+        Matrix.frustumM(mProjMatrix, 0, ratio, -ratio, -1, 1, 1, 7);
 
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         mMVMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVMatrix");
@@ -156,11 +159,11 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glEnableVertexAttribArray(mColorHandle);
 
         angle += 1.0f;
-        //horizontalAngle += 1.0f;
+        horizontalAngle += 1.0f;
         zTrans += 0.05;
 
         //Log.d("TILLER", "Horizontal Angle in: " + horizontalAngle);
-        if(touched) {
+        /*if(touched) {
             if(touch != null) {
                 if(touch.getX() > MRenderer.this.width / 2) {
                     horizontalAngle -= 1.0f;
@@ -169,7 +172,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
                 }
 
             }
-        }
+        }*/
+        //verticalAngle += 1.0f;
         float[] mRMatrix = new float[16];
         Matrix.setIdentityM(mMMatrix, 0);
         Matrix.setIdentityM(mRMatrix, 0);
@@ -184,7 +188,9 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
         //GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
-        GLES20.glDrawArrays(GLES20.GL_LINES, 0, pointCount);
+        //GLES20.glDrawArrays(GLES20.GL_LINES, 0, 6 * iters * iters);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6 * iters * iters, GLES20.GL_UNSIGNED_INT, indicesVB );
+        //Log.d("Tiller", "Iter: " + 6 * iters * iters);
         //GLES20.glDrawArrays(GLES20.GL_LINES, 0, 36);
 
         frameCount++;
@@ -209,114 +215,15 @@ public class MRenderer implements GLSurfaceView.Renderer {
     }
 
 
-    private void initShapes() {
+    public void initShapes() {
 
         float squareCoords[] = generateTorus();
-        //squareCoords = arrangeTorusCoords(squareCoords);
-        /*float squareCoords[] = {
-                // Back face
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-
-                // Right face
-                0.5f, 0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, -0.5f,
-
-                // Front face
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-
-                // Left face
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, 0.5f,
-
-                // Top face
-                -0.5f, 0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, -0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                // Bottom face
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, -0.5f
-        };*/
-
+        int squareIndices[] = arrangeTorusCoords();
 
         ArrayList<Float> squareNormals = new ArrayList<Float>();
-        int i = 0;
-        /*while( i < squareCoords.length ) {
-            float point1[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
-            float point2[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
-            float point3[] = {squareCoords[i++], squareCoords[i++], squareCoords[i++]  } ;
-
-            float vec11[] = {point1[0] - point2[0], point1[1] - point2[1], point1[2] - point2[2]};
-            float vec21[] = {point1[0] - point3[0], point1[1] - point3[1], point1[2] - point3[2]};
-            float normal1[] = {
-                    vec11[1] * vec21[2] - vec11[2] * vec21[1],
-                    vec11[2] * vec21[0] - vec11[0] * vec21[2],
-                    vec11[0] * vec21[1] - vec11[1] * vec21[0]
-            };
-
-            for (float aNormal : normal1) {
-                squareNormals.add(aNormal);
-            }
-
-
-            float vec22[] = {point2[0] - point1[0], point2[1] - point1[1], point2[2] - point1[2]};
-            float vec12[] = {point2[0] - point3[0], point2[1] - point3[1], point2[2] - point3[2]};
-            float normal2[] = {
-                    vec12[1] * vec22[2] - vec12[2] * vec22[1],
-                    vec12[2] * vec22[0] - vec12[0] * vec22[2],
-                    vec12[0] * vec22[1] - vec12[1] * vec22[0]
-            };
-
-            for (float aNormal : normal2) {
-                squareNormals.add(aNormal);
-            }
-
-
-            float vec13[] = {point3[0] - point1[0], point3[1] - point1[1], point3[2] - point1[2]};
-            float vec23[] = {point3[0] - point2[0], point3[1] - point2[1], point3[2] - point2[2]};
-            float normal3[] = {
-                    vec13[1] * vec23[2] - vec13[2] * vec23[1],
-                    vec13[2] * vec23[0] - vec13[0] * vec23[2],
-                    vec13[0] * vec23[1] - vec13[1] * vec23[0]
-            };
-
-            for (float aNormal : normal3) {
-                squareNormals.add(aNormal);
-            }
-        }*/
-
         float squareNormalsArray[] = new float[squareNormals.size()];
-        /*for(i = 0; i < squareNormals.size(); i++) {
-            squareNormalsArray[i] = squareNormals.get(i);
 
-        }*/
-
-        for(i = 0; i < squareNormalsArray.length;) {
+        for(int i = 0; i < squareNormalsArray.length;) {
            Log.d("Tiller", "Normal: " + squareNormalsArray[i++] + ", " + squareNormalsArray[i++] + ", " + squareNormalsArray[i++]) ;
         }
 
@@ -365,14 +272,6 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         };
 
-        /*ByteBuffer vbb = ByteBuffer.allocateDirect(
-                squareCoords.length * 4
-        );
-        vbb.order(ByteOrder.nativeOrder());
-        torusVB = vbb.asFloatBuffer();
-        //torusVB.put(squareCoords);
-        torusVB.put(squareAndNorms);
-        torusVB.position(0);*/
         torusVB = ByteBuffer.allocateDirect(squareCoords.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         torusVB.put(squareCoords).position(0);
 
@@ -381,21 +280,25 @@ public class MRenderer implements GLSurfaceView.Renderer {
 
         colorVB = ByteBuffer.allocateDirect(squareColors.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         colorVB.put(squareColors).position(0);
+
+        indicesVB = ByteBuffer.allocateDirect(squareIndices.length * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
+        indicesVB.put(squareIndices).position(0);
     }
+
 
 
     private float[] generateTorus() {
         ArrayList<Float> torusArrayList = new ArrayList<Float>();
-        float intervalNum = 2;
         float interval = (float) (Math.PI / intervalNum);
         float max = intervalNum * interval * 2;
         Log.d("Tiller", "Max: " + max);
-        float r = 1.0f;
-        float R = 0.5f;
-        iters = pointCount = 0;
+        float r = 0.5f;
+        float R = 1.2f;
+        iters = 0;
+        pointCount = 0;
         for(float u = 0; u < max; u += (Math.PI / intervalNum) ) {
             iters++;
-            Log.d("Tiller", "interval: " + interval);
+            //Log.d("Tiller", "interval: " + interval);
             for(float v = 0; v < max; v += (Math.PI / intervalNum) ) {
                 pointCount++;
                 float x = (float) ((R + r * Math.cos(v)) * Math.cos(u));
@@ -404,7 +307,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
                 torusArrayList.add(x);
                 torusArrayList.add(y);
                 torusArrayList.add(z);
-                Log.d("Tiller",u + " " + v + ": " + x + ", " + y + ", " + z);
+                Log.d("Tiller",pointCount + ":: " + u + " " + v + ": " + x + ", " + y + ", " + z);
 
             }
         }
@@ -420,38 +323,58 @@ public class MRenderer implements GLSurfaceView.Renderer {
         return torusCoords;
     }
 
-    private float[] arrangeTorusCoords(float[] torusCoords) {
-        int references[] = new int[3 * iters * iters];
-        int refCount = 0;
+    private int[] arrangeTorusCoords() {
+        int references[] = new int[6 * iters * iters];
+        int refCount = pointCount = 0;
 
         for(int i = 0; i < iters; i++) {
             for(int j = 0; j < iters; j++) {
-                if( j % 2 == 0) {
-                    references[refCount++] = i*iters + j;
-                    references[refCount++] = i*iters + j + 1;
-                    references[refCount++] = (i+1)*iters + j;
-                } else {
-                    references[refCount++] = i*iters + j;
-                    references[refCount++] = (i+1)*iters + j;
-                    references[refCount++] = (i+1)*iters + j+1;
-                }
-            }
+                int tr = i*iters + j;
+                int tl = (tr + 1 < (i + 1) * iters) ? tr + 1 : i * iters;
+                int br = (tr + iters < iters * iters) ? tr + iters : j;
+                int bl = (tl + iters < iters * iters) ? tl + iters : (j + 1 < iters) ? j + 1 : 0;
+                references[refCount] = tr;
+                Log.d("Tiller", "refCount: " + refCount + " reference: " + references[refCount]);
+                refCount++;
+                references[refCount] = tl;
+                Log.d("Tiller", "refCount: " + refCount + " reference: " + references[refCount]);
+                refCount++;
+                references[refCount] = br;
+                Log.d("Tiller", "refCount: " + refCount + " reference: " + references[refCount]);
+                refCount++;
 
+                references[refCount] = tl;
+                Log.d("Tiller", "refCount: " + refCount + " reference: " + references[refCount]);
+                refCount++;
+                references[refCount] = bl;
+                Log.d("Tiller", "refCount: " + refCount + " reference: " + references[refCount]);
+                refCount++;
+                references[refCount] = br;
+                Log.d("Tiller", "refCount: " + refCount + " reference: " + references[refCount]);
+                refCount++;
+            }
         }
 
-        Log.d("Tiller", "TorusCoords length: " + torusCoords.length);
+
+        /*Log.d("Tiller", "TorusCoords length: " + torusCoords.length);
         Log.d("Tiller", "references length: " + references.length);
         float referencedCoords[] = new float[3 * torusCoords.length];
         for(int i = 0; i < references.length; i++) {
             int point = i * 3;
             int coordPoint = references[i];
+            Log.d("Tiller", "CoordPoint: " + coordPoint);
             referencedCoords[point++] = torusCoords[coordPoint++];
+            Log.d("Tiller", "CoordPoint: " + coordPoint);
             referencedCoords[point++] = torusCoords[coordPoint++];
+            Log.d("Tiller", "CoordPoint: " + coordPoint);
             referencedCoords[point] = torusCoords[coordPoint];
 
+            int temp = references[i];
+            Log.d("Tiller", referencedCoords[temp++] + ", " + referencedCoords[temp++] + ", " + referencedCoords[temp]);
         }
 
-        return referencedCoords;
+        return referencedCoords;*/
+        return references;
     }
 
     public int loadShader(int type, String shaderStr) {

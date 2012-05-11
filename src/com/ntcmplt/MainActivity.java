@@ -48,6 +48,13 @@ public class MainActivity extends Activity
             if(event.getAction() == MotionEvent.ACTION_DOWN) {
                mRenderer.touched = true;
                 mRenderer.touch = event;
+                if(event.getX() > mRenderer.width / 2) {
+                    mRenderer.intervalNum -= 1.0;
+                    mRenderer.initShapes();
+                } else {
+                    mRenderer.intervalNum += 1.0;
+                    mRenderer.initShapes();
+                }
             }
 
             if(event.getAction() == MotionEvent.ACTION_UP) {
