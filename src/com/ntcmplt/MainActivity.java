@@ -48,18 +48,24 @@ public class MainActivity extends Activity
             if(event.getAction() == MotionEvent.ACTION_DOWN) {
                mRenderer.touched = true;
                 mRenderer.touch = event;
-                if(event.getX() > mRenderer.width / 2) {
-                    mRenderer.intervalNum -= 1.0;
-                    mRenderer.initShapes();
+                mRenderer.updated = false;
+                /*if(event.getX() > mRenderer.width / 2) {
+                    //mRenderer.intervalNum += 1.0;
+                    Log.d("Tiller", "IntervalNum: " + mRenderer.intervalNum);
+                    //mRenderer.updateShapes();
                 } else {
-                    mRenderer.intervalNum += 1.0;
-                    mRenderer.initShapes();
-                }
+                    if(mRenderer.intervalNum > 2) {
+                        //mRenderer.intervalNum -= 1.0;
+                        Log.d("Tiller", "IntervalNum: " + mRenderer.intervalNum);
+                        mRenderer.updateShapes();
+                    }
+                }*/
             }
 
             if(event.getAction() == MotionEvent.ACTION_UP) {
                 mRenderer.touched = false;
                 mRenderer.touch = null;
+                mRenderer.updated = true;
             }
 
 
