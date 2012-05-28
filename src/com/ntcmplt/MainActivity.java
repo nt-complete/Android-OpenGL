@@ -64,7 +64,7 @@ public class MainActivity extends Activity
 
             if(event.getAction() == MotionEvent.ACTION_UP) {
                 mRenderer.touched = false;
-                mRenderer.touch = null;
+                //mRenderer.touch = event;
                 mRenderer.updated = true;
             }
 
