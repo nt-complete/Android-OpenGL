@@ -35,7 +35,7 @@ public class MRenderer implements GLSurfaceView.Renderer {
     private FloatBuffer torusVB, normalVB, colorVB;
     private IntBuffer indicesVB;
     private final String vertexShaderStr =
-            "attribute vec4 vPosition; \n " +
+                    "attribute vec4 vPosition; \n " +
                     "attribute vec4 vColor;\n " +
                     "attribute vec3 vNormal;\n " +
                     "\n " +
@@ -55,15 +55,15 @@ public class MRenderer implements GLSurfaceView.Renderer {
                     "	float distance = length(uLightPosition - modelViewVertex);\n " +
                     "	vec3 lightVector = normalize(uLightPosition - modelViewVertex);\n " +
                     "\n " +
-                    "	float LambertTerm = max(dot(modelViewNormal, lightVector), 0.0);\n " +
-                    "	float diffuse = LambertTerm * (1.0 / (1.0 + (0.4 * distance * distance)));\n " +
+                    "	float LambertTerm = max(dot(modelViewNormal, lightVector), 0.1);\n " +
+                    "	float diffuse = LambertTerm * (1.0 / (1.0 + (0.5 * distance * distance)));\n " +
                     " \n " +
                     "	 vec3 R = reflect(-lightVector, modelViewNormal); \n " +
                     "    vec3 vEye = vec3(0.0, 0.0, 1.0); \n " +
                     "	 float specular = 1.0 * 1.0 * pow(max(dot(R, vEye), 0.0), 1.0);  \n " +
                     "\n " +
                     "	//varColor = ((vColor * 0.2) + vColor * diffuse * specular) ;\n " +
-                    "	varColor = (vColor * 0.2) + vColor * diffuse;\n " +
+                    "	varColor =  (vColor * 0.2) + vColor * diffuse;\n " +
                     "	//varColor = vColor ;\n " +
                     "\n " +
                     "	gl_Position = uModelViewProjectionM * vPosition; \n " +
@@ -78,38 +78,6 @@ public class MRenderer implements GLSurfaceView.Renderer {
                     "  gl_FragColor = varColor; \n" +
                     "}  \n";
 
-/*
-    private final String vertexShaderStr =
-                  "attribute vec4 vPosition;\n " +
-"attribute vec4 vColor; \n " +
-"attribute vec3 vNormal; \n " +
-"\n " +
-"uniform mat4 uModelViewProjectionM;\n " +
-"uniform mat4 uModelViewM;\n " +
-"uniform vec3 uLightPosition; \n " +
-"\n " +
-"varying vec4 varColor; \n " +
-"\n " +
-"void main()  { \n " +
-"\n " +
-"	// For transferring the vertex position in eye-space \n " +
-"	vec3 modelViewVertex = vec3(uModelViewM * vPosition); \n " +
-"\n " +
-"	// Obtains the normal \n " +
-"	vec3 modelViewNormal = vec3(uModelViewM * vec4(vNormal, 0.0)); \n " +
-"\n " +
-"	vec3 L = normalize(uLightPosition - modelViewVertex);\n " +
-"\n " +
-"	float distance = length(uLightPosition - modelViewVertex);\n " +
-"	float LambertTerm = max(dot(modelViewNormal, L), 0.0); \n " +
-"	float diffuse = LambertTerm * (1.0 / (1.0  (0.25 * distance * distance))); \n " +
-"	varColor = vColor * diffuse ; \n " +
-"\n " +
-"	gl_Position = uModelViewProjectionM * vPosition;\n " +
-"\n " +
-"\n " +
-"} ;\n ";
-*/
     private Context context;
     private int mProgram;
     private int mPositionHandle, mMVMatrixHandle, mMVPMatrixHandle, mLightPosHandle, mColorHandle, mNormalHandle;
@@ -142,7 +110,6 @@ public class MRenderer implements GLSurfaceView.Renderer {
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-        initShapes();
 
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderStr);
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderStr);
@@ -163,12 +130,17 @@ public class MRenderer implements GLSurfaceView.Renderer {
         mLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition");
         mColorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
         mNormalHandle = GLES20.glGetAttribLocation(mProgram, "vNormal");
+        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelViewProjectionM");
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelViewM");
 
         prevTime = Calendar.getInstance().getTimeInMillis();
         err = GLES20.glGetError();
         if(err != GLES20.GL_NO_ERROR) {
             Log.e("Tiller", "end of create. Error num: " + err);
         }
+
+        Matrix.setLookAtM(mVMatrix, 0, 0.0f, 0.0f, -3.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        initShapes();
     }
 
     @Override
@@ -181,14 +153,10 @@ public class MRenderer implements GLSurfaceView.Renderer {
         if(err != GLES20.GL_NO_ERROR) {
             Log.e("Tiller", "On surface changed. Error num: " + err);
         }
+
         float ratio = (float) width / height;
-        GLES20.glUniform3f(mLightPosHandle, 0,0,5.0f);
+        //GLES20.glUniform3f(mLightPosHandle, 0,0,5.0f);
         Matrix.frustumM(mProjMatrix, 0, ratio, -ratio, -1, 1, 1, 7);
-
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelViewProjectionM");
-        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelViewM");
-
-        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 1.0f);
 
         if(err != GLES20.GL_NO_ERROR) {
             Log.e("Tiller", "End of surface changed. Error num: " + err);
@@ -271,23 +239,32 @@ public class MRenderer implements GLSurfaceView.Renderer {
         if(err != GLES20.GL_NO_ERROR) {
            Log.e("Tiller", "Before Matrices set. Error num: " + err);
         }
+        float[] lightPos = {0.0f, 0.0f, -1.0f};
+        //GLES20.glUniform3f(mLightPosHandle, 0,0,-5.0f);
+        GLES20.glUniform3fv(mLightPosHandle, 1, lightPos, 0);
         //verticalAngle += 1.0f;
-        float[] mRMatrix = new float[16];
+        //float[] mRMatrix = new float[16];
+
+        err = GLES20.glGetError();
+        if(err != GLES20.GL_NO_ERROR) {
+            Log.e("Tiller", "Before multiplication. Error num: " + err);
+        }
+
         Matrix.setIdentityM(mMMatrix, 0);
-        Matrix.setIdentityM(mRMatrix, 0);
-        //Matrix.setRotateM(mMMatrix, 0, angle, 1.0f, 0, 0);
+        //Matrix.setIdentityM(mRMatrix, 0);
         Matrix.setRotateM(mMMatrix, 0, horizontalAngle, 0.0f, 1.0f, 0);
-        Matrix.setRotateM(mRMatrix, 0, verticalAngle, 1.0f, 0.0f, 0);
-        Matrix.multiplyMM(mMMatrix, 0, mMMatrix, 0, mRMatrix, 0);
-        //Matrix.translateM(mMMatrix,0,0,0, zTrans);
+
         Matrix.multiplyMM(mMVMatrix, 0, mVMatrix, 0, mMMatrix, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVMatrix, 0);
+
+        err = GLES20.glGetError();
+        if(err != GLES20.GL_NO_ERROR) {
+            Log.e("Tiller", "After multiplication. Error num: " + err);
+        }
         GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVMatrix, 0);
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
-        //GLES20.glUniform3f(mLightPosHandle, -3.0f, 5.0f, 5.0f);
-        //Log.d("Tiller", "drawing elements");
-        //GLES20.glDrawArrays(GLES20.GL_LINES, 0, 6 * iters * iters);
+
 
         err = GLES20.glGetError();
         if(err != GLES20.GL_NO_ERROR) {
@@ -358,7 +335,8 @@ public class MRenderer implements GLSurfaceView.Renderer {
         float fullShape[] = new float[torusCoords.length + torusNormals.length*2];
         System.arraycopy(torusCoords, 0, fullShape, 0, torusCoords.length);
         int j = torusCoords.length;
-        for(int i = 0; i < torusNormals.length; ){
+        Log.d("Tiller", "CoordsLen: " + j + " , NormLen: " + torusNormals.length);
+        for(int i = 0; i < torusCoords.length; ){
             //int normPoint = torusIndices[i] * 3;
             /*fullShape[j++] = torusCoords[point];
             fullShape[j++] = torusCoords[point+1];
@@ -370,13 +348,17 @@ public class MRenderer implements GLSurfaceView.Renderer {
             fullShape[j++] = torusNormalsArray[normPoint+2] + torusCoords[point+2];
         */
 
+            /*fullShape[j++] = 0.0f;
             fullShape[j++] = 0.0f;
             fullShape[j++] = 0.0f;
-            fullShape[j++] = 0.0f;
+            */
+            fullShape[j++] = torusCoords[i];
+            fullShape[j++] = torusCoords[i+1];
+            fullShape[j++] = torusCoords[i+2];
 
-            fullShape[j++] = torusNormals[i];
-            fullShape[j++] = torusNormals[i+1];
-            fullShape[j++] = torusNormals[i+2];
+            fullShape[j++] = torusNormals[i] + torusCoords[i];
+            fullShape[j++] = torusNormals[i+1] + torusCoords[i+1];
+            fullShape[j++] = torusNormals[i+2] + torusCoords[i+2];
             Log.d("Tiller", "i: " + i + " point: " + torusNormals[i] + ", " + torusNormals[i+1] + ", " + torusNormals[i+2]);
             i += 3;
         }
